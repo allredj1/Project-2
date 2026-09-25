@@ -17,7 +17,7 @@ def StaticallyDeterminate(nodes,bars):
     # Determine number of (valid) reactions supported by nodes of the truss
     n_reactions = 0
     for node in nodes:
-        if(any(node.ConstraintType())):
+        if(len(node.ConstraintType()) > 0):
             if(2 in node.ConstraintType()):
                 sys.exit("Truss cannot support a moment reaction force")
             elif(-1 in node.ConstraintType()):
@@ -26,8 +26,10 @@ def StaticallyDeterminate(nodes,bars):
                 n_reactions += len(node.ConstraintType())
     
     # Compute if b + r = 2j (Equation 3-1 of the textbook)
-    if(n_bars + n_reactions < 2*n_nodes):
-        sys.exit("The truss is unstable")
+    if n_reactions == 0:
+        sys.exit("No supports found. Add pin/roller constraints to the CSV before running.")
+    elif(n_bars + n_reactions < 2*n_nodes):
+        sys.exit("The truss is unstable; did you input all of the reaction constraints correctly?")
     elif(n_bars + n_reactions > 2*n_nodes):
         sys.exit("The truss is statically indeterminate, and cannot be resolved using method of joints")
     else:
@@ -53,9 +55,41 @@ def ComputeReactions(nodes):
     
     # Continue from here
     # Sum of moments about the pin
+    # Locations of the roller and pin nodes
+    [pin_x , pin_y] = pin_node.location
+    [roller_x , roller_y] = roller_node.location
+    
+    # Solving for roller reaction force
+    roller_reaction = 0
+    for node in nodes:
+        [node_x , node_y] = node.location
+        roller_reaction += node.yforce_external * (node_x - pin_x)
+        roller_reaction += node.xforce_external * (pin_y - node_y)
+    
+    if roller_node.constraint == 'roller_no_xdisp':
+        roller_reaction = -roller_reaction / (pin_y - roller_y)
+        roller_node.AddReactionXForce(roller_reaction)
+    elif roller_node.constraint == 'roller_no_ydisp':
+        roller_reaction = -roller_reaction / (roller_x - pin_x)
+        roller_node.AddReactionYForce(roller_reaction)
+    # sum of forces to solve for pin reactions
+    pin_reaction_y = 0
+    pin_reaction_x = 0
+    for node in nodes:
+        pin_reaction_y += node.yforce_external
+        pin_reaction_x += node.xforce_external
+    if roller_node.constraint == 'roller_no_ydisp':
+        pin_reaction_y = -pin_reaction_y - roller_reaction
+        pin_reaction_x = -pin_reaction_x
+        pin_node.AddReactionYForce(pin_reaction_y)
+        pin_node.AddReactionXForce(pin_reaction_x)
+    elif roller_node.constraint == 'roller_no_xdisp':
+        pin_reaction_y = -pin_reaction_y
+        pin_reaction_x = -pin_reaction_x - roller_reaction
+        pin_node.AddReactionYForce(pin_reaction_y)
+        pin_node.AddReactionXForce(pin_reaction_x)
+    
+    
 
-    # sum of forces in y direction
-
-    # sum of forces in x direction
     
     
