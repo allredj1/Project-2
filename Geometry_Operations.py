@@ -25,6 +25,14 @@ def VectorTwoNorm(vector):
 
 # Find a shared node between two bars
 def FindSharedNode(bar_1,bar_2):
+    if bar_1.init_node == bar_2.init_node:
+        return bar_1.init_node
+    elif bar_1.init_node == bar_2.end_node:
+        return bar_1.init_node
+    elif bar_1.end_node == bar_2.end_node:
+        return bar_1.end_node
+    else:
+        sys.exit('The two bars do not share a node')
     return
 
 # Given a bar and a node on that bar, find the other node
@@ -47,7 +55,10 @@ def BarNodeToVector(origin_node,bar):
 
 # Convert to bars that meet at a node into vectors pointing away from that node
 def BarsToVectors(bar_1,bar_2):
-    return
+   shared_node = FindSharedNode(bar_1, bar_2)
+   vec_1 = BarNodeToVector(shared_node, bar_1)
+   vec_2 = BarNodeToVector(shared_node, bar_2)
+   return vec_1,vec_2
 
 # Cross product of two vectors
 def TwoDCrossProduct(vec1,vec2):
@@ -73,8 +84,12 @@ def SineVectors(local_x_vec,other_vec):
 
 # Cosine of angle from local x bar to the other bar
 def CosineBars(local_x_bar,other_bar):
-    return
+    vectors = BarsToVectors(local_x_bar, other_bar)
+    cosine = CosineVectors(vectors[0], vectors[1])
+    return cosine
 
 # Sine of angle from local x bar to the other bar
 def SineBars(local_x_bar,other_bar):
-    return
+    vectors = BarsToVectors(local_x_bar, other_bar)
+    sine = SineVectors(vectors[0], vectors[1])
+    return sine
