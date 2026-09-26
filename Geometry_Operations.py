@@ -29,11 +29,12 @@ def FindSharedNode(bar_1,bar_2):
         return bar_1.init_node
     elif bar_1.init_node == bar_2.end_node:
         return bar_1.init_node
+    elif bar_1.end_node == bar_2.init_node:
+        return bar_1.end_node
     elif bar_1.end_node == bar_2.end_node:
         return bar_1.end_node
     else:
         sys.exit('The two bars do not share a node')
-    return
 
 # Given a bar and a node on that bar, find the other node
 def FindOtherNode(node,bar):
